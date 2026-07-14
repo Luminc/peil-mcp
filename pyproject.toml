@@ -24,3 +24,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/peil_mcp"]
+
+[tool.pytest.ini_options]
+# Make tests independent of the editable-install mechanism (src layout).
+pythonpath = ["src"]

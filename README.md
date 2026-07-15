@@ -70,6 +70,20 @@ your assistant's config as `PEIL_API_KEY` below.
 
 ## 2. Install the server
 
+**The easy way — no clone, no install** (once `peil-mcp` is published to PyPI):
+
+```sh
+uvx peil-mcp          # runs the latest release on demand
+# or, with pipx:
+pipx run peil-mcp
+```
+
+→ Your launch command is `uvx peil-mcp` (or `pipx run peil-mcp`). Skip to
+[step 3](#3-connect-your-assistant). Everything below is only needed if you're
+running **from source** (e.g. before the first release, or to hack on it).
+
+### From source
+
 You need **Python 3.11 or newer** and a local copy of this `mcp-server/` folder.
 Check your Python with `python3 --version`.
 

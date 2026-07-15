@@ -79,10 +79,44 @@ class PeilClient:
     def post(self, path: str, **kwargs) -> httpx.Response:
         return self.request("POST", path, **kwargs)
 
+    def put(self, path: str, **kwargs) -> httpx.Response:
+        return self.request("PUT", path, **kwargs)
+
+    def delete(self, path: str, **kwargs) -> httpx.Response:
+        return self.request("DELETE", path, **kwargs)
+
     # ── Domain helpers ────────────────────────────────────────────────────────
 
     def list_clients(self) -> list[dict]:
         return self.get("/clients/").json()
+
+    def list_invoices(self) -> list[dict]:
+        return self.get("/invoices/").json()
+
+    def resolve_invoice(self, ref) -> dict:
+        """Resolve an invoice by numeric id or by invoice number (case-insensitive)."""
+        invoices = self.list_invoices()
+
+        try:
+            as_id = int(str(ref).strip())
+        except (TypeError, ValueError):
+            as_id = None
+        if as_id is not None:
+            for inv in invoices:
+                if inv.get("id") == as_id:
+                    return inv
+
+        needle = str(ref).strip().lower()
+        by_number = [i for i in invoices if (i.get("invoice_number") or "").strip().lower() == needle]
+        if len(by_number) == 1:
+            return by_number[0]
+        if len(by_number) > 1:
+            raise PeilError(f"Multiple invoices match '{ref}'. Use the numeric invoice id instead.")
+
+        raise PeilError(
+            f"No invoice found matching '{ref}'. Use the numeric id (from list_invoices) "
+            "or the exact invoice number."
+        )
 
     def resolve_client(self, name: str) -> dict:
         """Resolve a client by name: exact (case-insensitive), then unique substring."""

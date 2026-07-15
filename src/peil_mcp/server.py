@@ -195,16 +195,18 @@ def draft_invoice(
 
 
 @mcp.tool()
-def send_invoice(invoice_id: int) -> str:
+def send_invoice(invoice: str) -> str:
     """Send an invoice to the client BY EMAIL. Irreversible and client-facing.
 
-    Only call this when the user has explicitly confirmed sending this specific
-    invoice. Requires the invoices:send key permission.
+    `invoice` is a numeric id or invoice number. Only call this when the user has
+    explicitly confirmed sending this specific invoice. Requires invoices:send.
     """
-    invoice = get_client().post(f"/invoices/{invoice_id}/send-email").json()
+    api = get_client()
+    inv = api.resolve_invoice(invoice)
+    sent = api.post(f"/invoices/{inv['id']}/send-email").json()
     return (
-        f"Invoice {invoice.get('invoice_number') or f'#{invoice_id}'} sent "
-        f"({_eur(invoice['total_amount'])}, due {invoice.get('due_date')})."
+        f"Invoice {sent.get('invoice_number') or f'#{inv['id']}'} sent "
+        f"({_eur(sent['total_amount'])}, due {sent.get('due_date')})."
     )
 
 

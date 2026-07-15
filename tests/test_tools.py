@@ -216,6 +216,19 @@ def test_create_client_posts_body(client, mock_api):
     assert "Created client Nieuw NV" in out
 
 
+def test_send_invoice_resolves_by_number(client, mock_api):
+    """send_invoice takes `invoice` (id or number) like its siblings, not invoice_id."""
+    mock_api.get("/invoices/").respond(json=[
+        {"id": 42, "invoice_number": "2026-009", "client_id": 1,
+         "status": "draft", "total_amount": 181.5},
+    ])
+    mock_api.post("/invoices/42/send-email").respond(json={
+        "id": 42, "invoice_number": "2026-009", "total_amount": 181.5, "due_date": "2026-08-14",
+    })
+    out = server.send_invoice(invoice="2026-009")
+    assert "Invoice 2026-009 sent" in out
+
+
 def test_set_invoice_status_resolves_and_puts(client, mock_api):
     mock_api.get("/invoices/").respond(json=[
         {"id": 42, "invoice_number": "2026-014", "client_id": 1,

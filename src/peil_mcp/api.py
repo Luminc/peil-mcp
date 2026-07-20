@@ -2,7 +2,7 @@
 
 The MCP server is a pure client of the scoped-key surface: it never touches
 the database, and every error is translated into a message an agent (or the
-person reading its output) can act on. See docs/plan-mcp-api-surface.md in
+person reading its output) can act on. See docs/archive/plan-mcp-api-surface.md in
 the main repo.
 """
 

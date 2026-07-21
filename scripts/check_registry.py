@@ -14,10 +14,34 @@ from __future__ import annotations
 
 import json
 import sys
+import time
+import urllib.error
 import urllib.request
 
 SERVER_NAME = "app.peil/peil-mcp"
 REGISTRY = "https://registry.modelcontextprotocol.io/v0/servers?search=peil"
+ATTEMPTS = 4
+
+
+def fetch() -> dict:
+    """Fetch the registry listing, retrying transient network failures.
+
+    This runs as the LAST step of the release pipeline, after PyPI, the mirror
+    and the registry publish have all succeeded. A one-off read timeout here
+    would fail the build on a release that actually worked — observed in
+    practice, which is why the retry exists.
+    """
+    last: Exception | None = None
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(REGISTRY, timeout=30) as response:
+                return json.load(response)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last = exc
+            if attempt < ATTEMPTS:
+                print(f"  attempt {attempt}/{ATTEMPTS} failed ({exc}) — retrying", file=sys.stderr)
+                time.sleep(5 * attempt)
+    raise SystemExit(f"✗ could not reach the registry after {ATTEMPTS} attempts: {last}")
 
 
 def main() -> int:
@@ -26,8 +50,7 @@ def main() -> int:
         return 2
     expected = sys.argv[1]
 
-    with urllib.request.urlopen(REGISTRY, timeout=30) as response:
-        payload = json.load(response)
+    payload = fetch()
 
     for entry in payload.get("servers", []):
         # The API has wrapped the server document in a `server` key in some

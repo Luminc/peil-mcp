@@ -2,8 +2,11 @@
 
 The MCP server is a pure client of the scoped-key surface: it never touches
 the database, and every error is translated into a message an agent (or the
-person reading its output) can act on. See docs/archive/plan-mcp-api-surface.md in
-the main repo.
+person reading its output) can act on.
+
+This package is mirrored to the public repo github.com/Luminc/peil-mcp; the
+design notes it used to point at live in the private Peil repo and are not
+public, so don't cite that path here.
 """
 
 import os

@@ -1,6 +1,6 @@
 [project]
 name = "peil-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server for Peil — log hours, draft invoices and check where you stand from an AI assistant"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,8 +24,13 @@ dependencies = [
 ]
 
 [project.urls]
+# Documentation points at the EN page on purpose: this package's audience finds
+# it through the MCP registries, and they read English. The NL page is at
+# /docs/mcp and the two are hreflang-paired.
 Homepage = "https://peil.app"
-Documentation = "https://peil.app/docs/mcp"
+Documentation = "https://peil.app/en/docs/mcp"
+Source = "https://github.com/Luminc/peil-mcp"
+Issues = "https://github.com/Luminc/peil-mcp/issues"
 
 [project.scripts]
 peil-mcp = "peil_mcp.server:main"

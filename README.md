@@ -1,7 +1,17 @@
 # Peil MCP server
 
+<!-- Ownership proof for the official MCP registry: it fetches
+     https://pypi.org/pypi/peil-mcp/json and requires this exact line in the
+     README (which PyPI serves as the package description) to match the `name`
+     in server.json. Do not remove or reword it. -->
+
+mcp-name: app.peil/peil-mcp
+
 Connect Peil to Claude (or any MCP client): log hours, draft invoices from
 unbilled hours, and check where you stand — from a prompt.
+
+- **Docs:** https://peil.app/en/docs/mcp
+- **Source:** https://github.com/Luminc/peil-mcp
 
 The server is a pure client of Peil's public API. It authenticates with a
 **scoped API key** you create in Peil under **Settings → Developer** (Pro).

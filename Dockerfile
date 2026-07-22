@@ -1,15 +1,25 @@
 # Container image for the Peil MCP server.
 #
-# Added for Glama's listing checks, which start the server and issue an MCP
-# introspection request. Note what that requires: the server must come up and
-# answer tools/list WITHOUT credentials. It does — PeilClient is constructed
-# lazily in get_client() on the first tool *call*, not at import — so this image
-# runs fine with no PEIL_API_KEY and reports all 22 tools. Don't "fix" that
-# laziness into eager construction at startup; it would break introspection for
-# every client that lists tools before the user has configured a key.
+# Added for Glama's listing checks — but Glama does NOT use this file. It
+# generates its own Dockerfile from a build spec held in its dashboard: clone
+# the mirror at a pinned commit, install, then run `mcp-proxy -- python -m
+# peil_mcp`. That image gets Python from `uv python install --default`, which
+# symlinks only the interpreter, so its build step must be
+# `python -m pip install --no-cache-dir --break-system-packages .` — there is no
+# `pip` shim on PATH (bare `pip` exits 127), and uv marks its own interpreter
+# externally-managed (plain `python -m pip` and `uv pip --system` both hit
+# PEP 668). That spec is not in this repo; if a Glama build fails, fix it there.
 #
-# Normal users do not need this image. The documented install is `uvx peil-mcp`,
-# which is why the README leads with that.
+# What this file is for: reproducing that check locally, and anyone who wants a
+# container. Normal users need neither — the documented install is
+# `uvx peil-mcp`, which is why the README leads with that.
+#
+# What both images share is the requirement worth protecting: the server must
+# come up and answer tools/list WITHOUT credentials. It does — PeilClient is
+# constructed lazily in get_client() on the first tool *call*, not at import —
+# so it runs fine with no PEIL_API_KEY and reports all 22 tools. Don't "fix"
+# that laziness into eager construction at startup; it would break introspection
+# for every client that lists tools before the user has configured a key.
 #
 # Build:  docker build -t peil-mcp .
 # Run:    docker run --rm -i -e PEIL_API_KEY=your-key peil-mcp

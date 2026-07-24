@@ -7,9 +7,10 @@
 
 mcp-name: app.peil/peil-mcp
 
-Connect Peil to Claude (or any MCP client): log hours, draft invoices from
-unbilled hours, and check where you stand — from a prompt.
+Connect [Peil](https://peil.app) to Claude (or any MCP client): log hours,
+draft invoices from unbilled hours, and check where you stand — from a prompt.
 
+- **Website:** https://peil.app
 - **Docs:** https://peil.app/en/docs/mcp
 - **Source:** https://github.com/Luminc/peil-mcp
 

@@ -52,23 +52,29 @@ def main() -> int:
 
     payload = fetch()
 
+    # The registry keeps every published version as its own entry (0.1.2,
+    # 0.1.3, 0.1.4, ...), oldest first. Taking the first match — as this did —
+    # reported "serves 0.1.2" on the release that had just published 0.1.4.
+    found = []
     for entry in payload.get("servers", []):
         # The API has wrapped the server document in a `server` key in some
         # versions and returned it flat in others; accept both.
         meta = entry.get("server", entry)
         if meta.get("name") != SERVER_NAME:
             continue
-        actual = meta.get("version")
-        print(f"  name:    {meta.get('name')}")
-        print(f"  version: {actual}")
-        print(f"  website: {meta.get('websiteUrl')}")
-        print(f"  repo:    {(meta.get('repository') or {}).get('url')}")
-        if actual != expected:
-            print(f"\n✗ registry serves {actual}, expected {expected}", file=sys.stderr)
-            return 1
-        print(f"\n✓ registry serving {expected}")
-        return 0
+        status = ((entry.get("_meta") or {}).get("io.modelcontextprotocol.registry/official") or {}).get("status")
+        found.append(meta.get("version"))
+        if meta.get("version") == expected and status in (None, "active"):
+            print(f"  name:    {meta.get('name')}")
+            print(f"  version: {expected}")
+            print(f"  website: {meta.get('websiteUrl')}")
+            print(f"  repo:    {(meta.get('repository') or {}).get('url')}")
+            print(f"\n✓ registry serving {expected}")
+            return 0
 
+    if found:
+        print(f"\n✗ registry lists {', '.join(v or '?' for v in found)}; {expected} not (yet) active", file=sys.stderr)
+        return 1
     print(f"\n✗ {SERVER_NAME} not found in the registry", file=sys.stderr)
     return 1
 

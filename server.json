@@ -3,7 +3,7 @@
   "name": "app.peil/peil-mcp",
   "title": "Peil",
   "description": "Log hours, draft invoices and check where you stand — finance for Dutch freelancers.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "websiteUrl": "https://peil.app/en/docs/mcp",
   "repository": {
     "url": "https://github.com/Luminc/peil-mcp",
@@ -13,7 +13,7 @@
     {
       "registryType": "pypi",
       "identifier": "peil-mcp",
-      "version": "0.1.3",
+      "version": "0.1.4",
       "transport": {
         "type": "stdio"
       },

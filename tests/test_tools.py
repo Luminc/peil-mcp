@@ -172,6 +172,8 @@ def test_expected_tools_are_registered():
         "schedule_send", "cancel_scheduled_send", "send_reminder",
         # reminder copy
         "get_reminder_copy", "set_reminder_copy",
+        # expenses
+        "list_expenses", "create_expense",
     }
 
 
@@ -267,3 +269,58 @@ def test_set_reminder_copy_merges_templates(client, mock_api):
     ct = payload["custom_templates"]
     assert ct["nl"]["pre_due"]["subject"] == "Oud"          # preserved
     assert ct["nl"]["overdue"]["subject"] == "Herinnering"  # added
+
+
+# ─── Expenses ─────────────────────────────────────────────────────────────────
+
+CATEGORIES = [
+    {"key": "travel", "label_nl": "Reizen en vervoer", "label_en": "Travel and transport"},
+    {"key": "software", "label_nl": "Software en abonnementen", "label_en": "Software and subscriptions"},
+    {"key": "services", "label_nl": "Advies en diensten", "label_en": "Professional services"},
+]
+EXPENSE = {
+    "id": 5, "name": "Treinkaartje", "date": "2026-09-12", "category": "travel",
+    "total_amount": "24.20", "vat_amount": "2.00", "amount": "22.20",
+    "depreciation_years": None, "receipts": [],
+}
+
+
+def test_create_expense_posts_the_receipt_values(client, mock_api):
+    mock_api.get("/expenses/categories").respond(json=CATEGORIES)
+    route = mock_api.post("/expenses").respond(201, json=EXPENSE)
+    out = server.create_expense(name="Treinkaartje", date="2026-09-12", total=24.2,
+                                category="Reizen en vervoer", vat=2.0)
+    import json
+    assert json.loads(route.calls.last.request.read()) == {
+        "name": "Treinkaartje", "date": "2026-09-12", "category": "travel",
+        "total_amount": "24.20", "vat_amount": "2.00",
+    }
+    assert "Added expense #5" in out and "No receipt is kept yet" in out
+
+
+@pytest.mark.parametrize("given,key", [("travel", "travel"), ("Software", "software"), ("professional", "services")])
+def test_a_category_is_found_by_key_or_label(client, mock_api, given, key):
+    mock_api.get("/expenses/categories").respond(json=CATEGORIES)
+    route = mock_api.post("/expenses").respond(201, json=EXPENSE)
+    server.create_expense(name="X", date="2026-09-12", total=10, category=given)
+    import json
+    assert json.loads(route.calls.last.request.read())["category"] == key
+
+
+def test_an_unknown_category_lists_the_options(client, mock_api):
+    mock_api.get("/expenses/categories").respond(json=CATEGORIES)
+    with pytest.raises(PeilError, match=r"travel \(Travel and transport\)"):
+        server.create_expense(name="X", date="2026-09-12", total=10, category="boten")
+
+
+@pytest.mark.parametrize("total,vat", [(0, 0), (10, 12), (10, -1)])
+def test_impossible_amounts_are_refused_before_sending(client, mock_api, total, vat):
+    with pytest.raises(PeilError):
+        server.create_expense(name="X", date="2026-09-12", total=total, vat=vat, category="travel")
+
+
+def test_list_expenses_says_which_have_no_receipt(client, mock_api):
+    mock_api.get("/expenses").respond(json=[EXPENSE])
+    out = server.list_expenses(year=2026)
+    assert "Treinkaartje: €24.20 (btw €2.00), travel, no receipt kept (#5)" in out
+    assert "Expenses in 2026 (1, €24.20 paid)" in out

@@ -36,6 +36,7 @@ permission can never email anything on your behalf.
 | `list_invoices` | List invoices, filterable by status / client |
 | `orientation_snapshot` | Outstanding / overdue / drafts / YTD position |
 | `get_reminder_copy` | Your custom reminder email copy + schedule |
+| `list_expenses` | A year's one-off expenses, and which have no receipt kept |
 
 **Hours** (`timesheet:write`)
 
@@ -50,6 +51,12 @@ permission can never email anything on your behalf.
 | Tool | What it does |
 |---|---|
 | `create_client` / `update_client` / `delete_client` | Client CRUD (delete blocked if it has projects/sent invoices) |
+
+**Expenses** (`expenses:write`)
+
+| Tool | What it does |
+|---|---|
+| `create_expense` | Add an expense as the receipt says it: total, Dutch btw, category (key or label). Your assistant can read the receipt; the photo itself is kept in the Peil app |
 
 **Invoices** (`invoices:write`)
 

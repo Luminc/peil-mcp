@@ -38,6 +38,12 @@ to De Correspondent now" / "scheduled for Monday 2026-07-20 09:00").
 records. For deletes and for editing anything already sent/paid, confirm first. \
 After an edit, restate what changed (old → new). Deletes of sent/paid records \
 are blocked server-side — surface that guardrail rather than working around it.
+- EXPENSES: create_expense takes what the receipt says: the total paid and the \
+btw in it (Dutch btw only; foreign VAT is not reclaimable, leave it in the \
+total and pass vat 0). Read amounts with Dutch decimals ("12,95" = 12.95) and \
+day-first dates. Before saving, restate name, date, total, btw and category \
+and let the user correct them. The receipt photo itself is kept in Peil's app \
+(Financiën), not through these tools.
 """
 
 mcp = FastMCP("peil", instructions=INSTRUCTIONS)
@@ -545,6 +551,87 @@ def set_reminder_copy(
     ct[lang] = lang_map
     api.put("/invoices/reminder-settings", json={"custom_templates": ct})
     return f"Saved {lang}/{tone} reminder copy. Subject: {subject}"
+
+
+# ─── Expenses ─────────────────────────────────────────────────────────────────
+
+def _resolve_category(api: PeilClient, category: str) -> dict:
+    """A category by key or by its Dutch/English label, loosely."""
+    cats = api.get("/expenses/categories").json()
+    want = category.strip().lower()
+    for c in cats:
+        if want in (c["key"], c["label_nl"].lower(), c["label_en"].lower()):
+            return c
+    hits = [c for c in cats if want in c["label_nl"].lower() or want in c["label_en"].lower()]
+    if len(hits) == 1:
+        return hits[0]
+    options = ", ".join(f"{c['key']} ({c['label_en']})" for c in cats)
+    raise PeilError(f"Unknown or ambiguous category '{category}'. Use one of: {options}.")
+
+
+@mcp.tool()
+def list_expenses(year: int | None = None) -> str:
+    """List the one-off expenses of a year (default: this year), newest first.
+    Monthly costs (rent, AOV, pension) live in Peil's cost list, not here."""
+    api = get_client()
+    y = year or date.today().year
+    rows = api.get("/expenses", params={"year": y}).json()
+    if not rows:
+        return f"No expenses in {y}."
+    lines = []
+    for e in rows:
+        line = f"- {e['date']} {e['name']}: {_eur(e['total_amount'])}"
+        if float(e.get("vat_amount") or 0):
+            line += f" (btw {_eur(e['vat_amount'])})"
+        line += f", {e['category']}"
+        if e.get("depreciation_years"):
+            line += f", written off over {e['depreciation_years']} years"
+        if not e.get("receipts"):
+            line += ", no receipt kept"
+        lines.append(line + f" (#{e['id']})")
+    total = sum(float(e["total_amount"]) for e in rows)
+    return f"Expenses in {y} ({len(rows)}, {_eur(total)} paid):\n" + "\n".join(lines)
+
+
+@mcp.tool()
+def create_expense(
+    name: str,
+    date: str,
+    total: float,
+    category: str,
+    vat: float = 0.0,
+    notes: str | None = None,
+) -> str:
+    """Add a one-off business expense, as on the receipt: the total paid and
+    the Dutch btw in it. `category` is a key or label (e.g. "travel",
+    "Software en abonnementen"); equipment from €450 excl. btw is written off
+    over five years automatically. Requires the expenses:write permission.
+    Restate the values to the user before calling."""
+    api = get_client()
+    day = _validate_date(date, "date")
+    if total <= 0:
+        raise PeilError("total must be more than 0.")
+    if vat < 0 or vat > total:
+        raise PeilError("vat must be between 0 and the total.")
+    cat = _resolve_category(api, category)
+    payload: dict = {
+        "name": name, "date": day, "category": cat["key"],
+        "total_amount": f"{total:.2f}", "vat_amount": f"{vat:.2f}",
+    }
+    if notes:
+        payload["description"] = notes
+    e = api.post("/expenses", json=payload).json()
+    out = (
+        f"Added expense #{e['id']}: {e['name']} on {e['date']}, {_eur(e['total_amount'])} "
+        f"(btw {_eur(e['vat_amount'])}), {cat['label_en']}. Cost {_eur(e['amount'])}"
+    )
+    if e.get("depreciation_years"):
+        out += f", written off over {e['depreciation_years']} years"
+    out += (
+        ".\nNo receipt is kept yet: add the photo to this expense in Peil "
+        "(Financiën) to keep it for the 7-year bewaarplicht."
+    )
+    return out
 
 
 def main() -> None:

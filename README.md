@@ -8,14 +8,17 @@
 mcp-name: app.peil/peil-mcp
 
 Connect [Peil](https://peil.app) to Claude (or any MCP client): log hours,
-draft invoices from unbilled hours, and check where you stand — from a prompt.
+draft invoices from unbilled hours, add expenses from a receipt, and check
+where you stand — from a prompt.
 
 - **Website:** https://peil.app
 - **Docs:** https://peil.app/en/docs/mcp
 - **Source:** https://github.com/Luminc/peil-mcp
 
 The server is a pure client of Peil's public API. It authenticates with a
-**scoped API key** you create in Peil under **Settings → Developer** (Pro).
+**scoped API key** you create in Peil under **Settings → Developer**. Keys and
+this server are free on every plan; what is Pro in Peil (emailing invoices,
+reminders, recurring invoices) stays Pro over a key too.
 
 ## Draft-by-default
 
@@ -82,13 +85,14 @@ permission can never email anything on your behalf.
 ## 1. Create your key
 
 In Peil: **Settings → Developer** → create a key with the permissions you want.
-Start with **read + Log hours + Draft invoices**; leave **Send invoices** off
-unless you truly want an assistant emailing clients. You'll paste this key into
+Start with **read + Log hours + Draft invoices** (add **Add expenses** if you
+want your assistant to file receipts); leave **Send invoices** off unless you
+truly want an assistant emailing clients. You'll paste this key into
 your assistant's config as `PEIL_API_KEY` below.
 
 ## 2. Install the server
 
-**The easy way — no clone, no install** (once `peil-mcp` is published to PyPI):
+**The easy way — no clone, no install:**
 
 ```sh
 uvx peil-mcp          # runs the latest release on demand
@@ -250,6 +254,7 @@ Once connected, try:
 - *"Where do I stand?"* → `orientation_snapshot`
 - *"Log 6 hours to De Correspondent today for editing work."* → `log_hours`
 - *"Draft an invoice from my unbilled hours for De Correspondent."* → `draft_invoice`
+- *"Here's my train ticket, add it as an expense."* (with a photo) → `create_expense`
 
 With **Send invoices** left off your key, an assistant can prepare everything
 but physically cannot email a client — you send from Peil yourself.

@@ -3,7 +3,7 @@
   "name": "app.peil/peil-mcp",
   "title": "Peil",
   "description": "Log hours, draft invoices and check where you stand — finance for Dutch freelancers.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "websiteUrl": "https://peil.app/en/docs/mcp",
   "repository": {
     "url": "https://github.com/Luminc/peil-mcp",
@@ -13,14 +13,14 @@
     {
       "registryType": "pypi",
       "identifier": "peil-mcp",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "PEIL_API_KEY",
-          "description": "Scoped API key from Peil under Settings -> Developer settings (Pro).",
+          "description": "Scoped API key from Peil under Settings -> Developer settings.",
           "isRequired": true,
           "isSecret": true,
           "format": "string"

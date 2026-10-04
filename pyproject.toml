@@ -1,7 +1,7 @@
 [project]
 name = "peil-mcp"
-version = "0.1.4"
-description = "MCP server for Peil — log hours, draft invoices and check where you stand from an AI assistant"
+version = "0.1.5"
+description = "MCP server for Peil — log hours, draft invoices, add expenses and check where you stand from an AI assistant"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
